@@ -1,0 +1,43 @@
+name: swiper
+category: DATA
+pack: main
+entrypoint: components/swiper/swiper
+slots:
+  - name: components
+    path: /slides/~{}
+    label: Slide Contents
+    onSelectSignals:
+      - componentsignal: SET_ACTIVE_INDEX
+        index: $RecordMeta{index}
+properties:
+  - name: slides
+    type: LIST
+    items:
+      addLabel: Add Slide
+      displayTemplate: "Slide $RecordMeta{index}"
+      title: Slide Properties
+      defaultDefinition:
+        components: []
+title: Swiper
+discoverable: true
+description: A sample component that outputs text
+defaultDefinition:
+  uesio.variant: uesio/io.default
+  slides:
+    - components:
+        - uesio/io.text:
+            text: Slide 1
+    - components:
+        - uesio/io.text:
+            text: Slide 2
+    - components:
+        - uesio/io.text:
+            text: Slide 3
+sections:
+  - label: Slides
+    id: slides
+    type: CUSTOM
+    properties:
+      - slides
+  - type: STYLES
+  - type: DISPLAY
