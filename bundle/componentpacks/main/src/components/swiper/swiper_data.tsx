@@ -3,19 +3,18 @@ import SwiperUtility from "../../utilities/swiper/swiper"
 import { SwiperOptions } from "swiper/types"
 import { signals } from "./signals"
 
-type SlideDefinition = {
-	components: definition.DefinitionList
-}
-
 type ComponentDefinition = {
-	slides?: SlideDefinition[]
+	wire?: string
+	components?: definition.DefinitionList
+	recordDisplay?: component.DisplayCondition[]
 	onReachEnd?: signal.SignalDefinition[]
 	onReachStart?: signal.SignalDefinition[]
 	options?: SwiperOptions
 }
 
 const Component: definition.UC<ComponentDefinition> = (props) => {
-	const { slides, onReachStart, onReachEnd, options } = props.definition
+	const { onReachStart, onReachEnd, options, recordDisplay } =
+		props.definition
 
 	const componentId = api.component.getComponentIdFromProps(props)
 
@@ -26,17 +25,35 @@ const Component: definition.UC<ComponentDefinition> = (props) => {
 
 	const { path, context, componentType } = props
 
+	const wire = api.wire.useWire(props.definition.wire, context)
+
 	const endHandler = api.signal.getHandler(onReachEnd, context)
 	const startHandler = api.signal.getHandler(onReachStart, context)
 
+	const itemContexts = component.useContextFilter<wire.WireRecord>(
+		wire?.getData() || [],
+		recordDisplay,
+		(record, context) => {
+			if (record && wire) {
+				context = context.addRecordFrame({
+					wire: wire.getId(),
+					record: record.getId(),
+					view: wire.getViewId(),
+				})
+			}
+			return context
+		},
+		context
+	)
+
 	const slideNodes =
-		slides?.map((slide, index) => (
+		itemContexts.map((recordContext, i) => (
 			<component.Slot
-				definition={slide}
+				key={recordContext.item.getId() || i}
+				definition={props.definition}
 				listName="components"
-				path={`${path}["slides"]["${index}"]`}
-				key={index}
-				context={context}
+				path={`${path}["slides"]["${i}"]`}
+				context={recordContext.context}
 				componentType={componentType}
 			/>
 		)) ?? []
